@@ -484,10 +484,10 @@ int processFFOPMFile(const std::string &in_file_path, const std::string &out_fil
 	
 	int	readPtr = 0;
 	
-	OPMPatch	patch[128];
+	OPMPatch	patch[256];
 	int			patchNum = 0;
 	
-	while ((fileSize - readPtr) >= sizeof(FfopmPatch)) {
+	while (((fileSize - readPtr) >= sizeof(FfopmPatch)) && (patchNum < 256)) {
 		FfopmPatch	ffopm;
 		::memcpy(ffopm.raw.data, &ffopmData[readPtr], sizeof(FfopmPatch));
 		patch[patchNum].loadFromFfopm(&ffopm);
@@ -593,7 +593,7 @@ int main(int argc, const char * argv[]) {
 	for (int i=1; i<argc; ++i) {
 		if (argv[i][0] == '-') {
 			switch (argv[i][1]) {
-					
+				
 				default:
 					std::cout << "Invalid option: " << argv[i] << std::endl;
 					help_mode = true;
