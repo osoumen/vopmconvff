@@ -464,6 +464,9 @@ void processInputFile(const std::string &in_file_path)
 
 int processFFOPMFile(const std::string &in_file_path, const std::string &out_file_path)
 {
+	std::cout << in_file_path << std::endl;
+	std::cout << "Convert to opm format." << std::endl;
+
 	int numProcessed = 0;
 	std::ifstream ifs(in_file_path, std::ios::in | std::ios::binary);
 	
@@ -487,12 +490,17 @@ int processFFOPMFile(const std::string &in_file_path, const std::string &out_fil
 	while ((fileSize - readPtr) >= sizeof(FfopmPatch)) {
 		FfopmPatch	ffopm;
 		::memcpy(ffopm.raw.data, &ffopmData[readPtr], sizeof(FfopmPatch));
-		patch[patchNum++].loadFromFfopm(&ffopm);
+		patch[patchNum].loadFromFfopm(&ffopm);
+		std::cout << patchNum << ": " << patch[patchNum].common_param.name << std::endl;
 		readPtr += sizeof(FfopmPatch);
+		++patchNum;
 	}
 	
 	numProcessed = exportToOPM(out_file_path, patch, patchNum);
 	
+	std::cout << "=>" << out_file_path << std::endl;
+	std::cout << "done." << std::endl;
+
 	return numProcessed;
 }
 
@@ -555,6 +563,9 @@ int exportToOPM(const std::string &out_file_path, const OPMPatch *patch, int pat
 
 int processOPMFile(const std::string &in_file_path, const std::string &out_file_path)
 {
+	std::cout << in_file_path << std::endl;
+	std::cout << "Convert to ffopm format." << std::endl;
+
 	OPMPatch	patch[256];
 	int numPatches = loadFromOPM(in_file_path, patch, 256);
 	
@@ -563,8 +574,12 @@ int processOPMFile(const std::string &in_file_path, const std::string &out_file_
 	for (int i=0; i<numPatches; ++i) {
 		FfopmPatch p;
 		patch[i].writeToFfopm(&p);
+		std::cout << i << ": " << patch[i].common_param.name << std::endl;
 		ofs.write(reinterpret_cast<const char*>(p.raw.data), sizeof(FfopmPatch));
 	}
+	
+	std::cout << "=>" << out_file_path << std::endl;
+	std::cout << "done." << std::endl;
 	
 	return 0;
 }
