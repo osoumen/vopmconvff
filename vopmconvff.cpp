@@ -21,6 +21,8 @@
 
 #define USERPATCH_FORMAT_VERSION	(1)
 
+bool flatten_TL_option = false;
+
 //! エンベロープ、LFOのゲイン調整に使える入力ソース
 enum EnvelopeInputSelect {
 	kModulatorInput_NoInput = 0,
@@ -538,6 +540,7 @@ int exportToOPM(const std::string &out_file_path, const OPMPatch *patch, int pat
 				"C2:"
 			};
 			for (int op=0; op<4; ++op) {
+				bool is_carrier = is_carrier_table[((p->fl_con) & 0x07)][opslot[op]];
 				const SlotPatch *sl = &p->slot[opslot[op]];
 				ofs << opName[op];
 				ofs << std::setw(3) << (sl->ks_ar & 0x1f) << " ";
@@ -545,7 +548,12 @@ int exportToOPM(const std::string &out_file_path, const OPMPatch *patch, int pat
 				ofs << std::setw(3) << (sl->dt2_d2r & 0x1f) << " ";
 				ofs << std::setw(3) << (sl->d1l_rr & 0x0f) << " ";
 				ofs << std::setw(3) << (sl->d1l_rr >> 4) << " ";
-				ofs << std::setw(3) << (sl->common.tl & 0x7f) << " ";
+				if (is_carrier && flatten_TL_option) {
+					ofs << "  0 ";
+				}
+				else {
+					ofs << std::setw(3) << (sl->common.tl & 0x7f) << " ";
+				}
 				ofs << std::setw(3) << (sl->ks_ar >> 6) << " ";
 				ofs << std::setw(3) << (sl->dt1_mul & 0x0f) << " ";
 				ofs << std::setw(3) << ((sl->dt1_mul >> 4) & 0x07) << " ";
@@ -594,7 +602,11 @@ int main(int argc, const char * argv[]) {
 	for (int i=1; i<argc; ++i) {
 		if (argv[i][0] == '-') {
 			switch (argv[i][1]) {
-				
+				case 'f':
+					// ff=>opm変換時にキャリアのTLを強制的に0に固定する
+					flatten_TL_option = true;
+					break;
+					
 				default:
 					std::cout << "Invalid option: " << argv[i] << std::endl;
 					help_mode = true;
@@ -610,6 +622,8 @@ int main(int argc, const char * argv[]) {
 	if (help_mode || (in_file_list.size() == 0)) {
 		std::cout << "Usage: vopmconvff <input> .." << std::endl;
 		std::cout << "<input> supports .ffopm(PMD), .opm(VOPM)" << std::endl;
+		std::cout << "Options:" << std::endl;
+		std::cout << "  -f         Force carrier TL to 0 when converting to .opm" << std::endl;
 		exit(0);
 	}
 	
