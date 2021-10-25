@@ -2,4 +2,6 @@
 ```
 Usage: vopmconvff <input> ..
 <input> supports .ffopm(PMD), .opm(VOPM)
+
+<input>は複数指定可能です。
 ```
